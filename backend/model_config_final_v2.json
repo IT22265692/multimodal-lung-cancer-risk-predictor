@@ -1,0 +1,50 @@
+{
+  "ct_dim": 512,
+  "rad_dim": 16,
+  "clin_dim": 10,
+  "ct_hidden": 16,
+  "rad_feature_names": [
+    "original_glszm_SmallAreaLowGrayLevelEmphasis",
+    "original_glszm_GrayLevelNonUniformityNormalized",
+    "original_shape_Elongation",
+    "original_firstorder_90Percentile",
+    "original_glszm_LargeAreaEmphasis",
+    "original_gldm_LargeDependenceLowGrayLevelEmphasis",
+    "original_firstorder_Minimum",
+    "original_ngtdm_Strength",
+    "original_shape_Sphericity",
+    "original_glszm_ZoneVariance",
+    "original_gldm_DependenceVariance",
+    "original_glszm_SmallAreaEmphasis",
+    "original_ngtdm_Complexity",
+    "original_shape_Flatness",
+    "original_glrlm_LongRunLowGrayLevelEmphasis",
+    "original_ngtdm_Coarseness"
+  ],
+  "clinical_feature_names": [
+    "age",
+    "clinical.T.Stage",
+    "Clinical.N.Stage",
+    "Clinical.M.Stage",
+    "gender_male",
+    "stage_encoded",
+    "hist_adenocarcinoma",
+    "hist_large cell",
+    "hist_nos",
+    "hist_squamous cell carcinoma"
+  ],
+  "histology_categories": [
+    "adenocarcinoma",
+    "large cell",
+    "nos",
+    "squamous cell carcinoma"
+  ],
+  "stage_map": {
+    "I": 0,
+    "II": 1,
+    "IIIa": 2,
+    "IIIb": 3
+  },
+  "test_cindex": 0.598334401024984,
+  "val_cindex": 0.6651814131126671
+}
