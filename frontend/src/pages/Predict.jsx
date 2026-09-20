@@ -142,21 +142,36 @@ export default function Predict() {
     }
   }
 
+  // Risk banding comes from the backend, which ranks the patient against the
+  // training cohort (a percentile) rather than a sigmoid of the raw score.
+  // A Cox score sits near zero for almost everyone, so its sigmoid lands around
+  // 0.4-0.6 for every case, which is why predictions all used to read
+  // "Moderate". The sigmoid path below is kept only as a fallback for older
+  // backends that don't return risk_band / risk_percentile.
+  const hasCohort =
+    result && result.risk_band != null && result.risk_percentile != null
   const riskFraction = result ? 1 / (1 + Math.exp(-result.risk_score)) : 0
-  const riskLevel =
-    riskFraction < 0.4 ? 'low' : riskFraction < 0.65 ? 'moderate' : 'high'
+  const riskPct = hasCohort ? result.risk_percentile : riskFraction * 100
+  const riskLabel = !result
+    ? ''
+    : hasCohort
+      ? result.risk_band
+      : riskFraction < 0.4
+        ? 'Lower relative risk'
+        : riskFraction < 0.65
+          ? 'Moderate relative risk'
+          : 'Higher relative risk'
+  const riskLevel = riskLabel.startsWith('Lower')
+    ? 'low'
+    : riskLabel.startsWith('Higher')
+      ? 'high'
+      : 'moderate'
   const riskColor =
     riskLevel === 'low'
       ? 'var(--success)'
       : riskLevel === 'moderate'
         ? 'var(--warning)'
         : 'var(--danger)'
-  const riskLabel =
-    riskLevel === 'low'
-      ? 'Lower relative risk'
-      : riskLevel === 'moderate'
-        ? 'Moderate relative risk'
-        : 'Higher relative risk'
 
   return (
     <div className="fade-in">
@@ -478,7 +493,7 @@ export default function Predict() {
                     <div
                       className="gauge-fill"
                       style={{
-                        width: `${(riskFraction * 100).toFixed(1)}%`,
+                        width: `${riskPct.toFixed(1)}%`,
                         background: riskColor,
                       }}
                     />
@@ -520,6 +535,18 @@ export default function Predict() {
                   <span style={{ color: riskColor }}>
                     {result.risk_score.toFixed(4)}
                   </span>
+                  {hasCohort && (
+                    <span
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 500,
+                        color: 'var(--text-dim)',
+                      }}
+                    >
+                      {' '}
+                      ({Math.round(riskPct)}th percentile of cohort)
+                    </span>
+                  )}
                   <br />
                   <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-dim)' }}>
                     Estimated median survival:{' '}
@@ -581,9 +608,11 @@ export default function Predict() {
                   </span>
                 </div>
                 <div className="detail-row">
-                  <span className="label">Sigmoid risk fraction</span>
+                  <span className="label">Cohort percentile</span>
                   <span className="value">
-                    {(riskFraction * 100).toFixed(1)}%
+                    {hasCohort
+                      ? `${Math.round(riskPct)}th of ${result.cohort_size ?? '—'} patients`
+                      : `${(riskFraction * 100).toFixed(1)}% (sigmoid fallback)`}
                   </span>
                 </div>
                 <div className="detail-row">

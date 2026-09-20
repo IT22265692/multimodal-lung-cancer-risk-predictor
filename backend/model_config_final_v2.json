@@ -2,7 +2,7 @@
   "ct_dim": 512,
   "rad_dim": 16,
   "clin_dim": 10,
-  "ct_hidden": 16,
+  "ct_hidden": 8,
   "rad_feature_names": [
     "original_glszm_SmallAreaLowGrayLevelEmphasis",
     "original_glszm_GrayLevelNonUniformityNormalized",
@@ -45,6 +45,8 @@
     "IIIa": 2,
     "IIIb": 3
   },
-  "test_cindex": 0.598334401024984,
-  "val_cindex": 0.6651814131126671
+  "test_cindex": 0.5883854499042757,
+  "val_cindex": 0.6651814131126671,
+  "model_type": "ct_clinical",
+  "uses_radiomics": false
 }
