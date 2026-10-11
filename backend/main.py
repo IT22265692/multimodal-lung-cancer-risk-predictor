@@ -14,6 +14,14 @@ serve-time features could not be reproduced exactly). The RTSTRUCT is still used
 only to draw the tumour preview.
 
 Model weights load from fusion_model_final_v2.npz (numpy state dict).
+
+v2.1 changes
+- M-stage is no longer sent to the model. In the training data M-stage is coded
+  0 (373 patients) or 3 (4 patients); the form accepts 0/1, a value the model
+  never saw, and the 4 M=3 patients made the network treat M as "much lower
+  risk". The model now always receives M-stage 0 until it is retrained.
+- /api/config and every prediction report backend_version, so the web page can
+  show which backend is actually running.
 """
 
 import json
@@ -44,6 +52,9 @@ with open(BASE_DIR / "scalers_final_v2.pkl", "rb") as f:
     SCALERS = pickle.load(f)          # ct_scaler + clin_scaler are reused unchanged
 with open(BASE_DIR / "baseline_hazard.json") as f:
     BASELINE_HAZARD = json.load(f)
+
+BACKEND_VERSION = "2.1-percentile-bands"
+M_STAGE_FOR_MODEL = 0.0   # see v2.1 note above
 
 TARGET_SHAPE = (96, 96, 96)
 HU_WINDOW = (-1000, 400)
@@ -104,8 +115,12 @@ _BAND_LOWER_PCT = 50.0   # below this percentile -> Lower
 _BAND_UPPER_PCT = 85.0   # above this percentile -> Higher
 
 
+_CALIBRATION_SOURCE = "built-in quantile grid"
+
+
 def _load_calibration_scores():
     """Prefer this model's own scores (fusion_model_risk_scores.csv)."""
+    global _CALIBRATION_SOURCE
     for name in ("risk_calibration.json", "fusion_model_risk_scores.csv"):
         p = BASE_DIR / name
         if not p.exists():
@@ -118,6 +133,7 @@ def _load_calibration_scores():
                 import csv as _csv
                 vals = [float(r["risk_score"]) for r in _csv.DictReader(open(p, newline=""))]
             if vals:
+                _CALIBRATION_SOURCE = name
                 return np.sort(np.asarray(vals, dtype=float))
         except Exception:
             pass
@@ -125,6 +141,8 @@ def _load_calibration_scores():
 
 
 _TRAIN_RISK_SORTED = _load_calibration_scores()
+print(f"[Lunexa] backend {BACKEND_VERSION} | calibration: {_CALIBRATION_SOURCE} "
+      f"({0 if _TRAIN_RISK_SORTED is None else len(_TRAIN_RISK_SORTED)} scores)")
 
 
 def risk_percentile(r):
@@ -243,6 +261,13 @@ def generate_preview_images(ct_input_path, rtstruct_path, roi_name):
 
 
 def run_prediction(ct_input_path, age, t_stage, n_stage, m_stage, overall_stage, histology, gender):
+    # Input checks (the form enforces the same ranges)
+    if not float(age).is_integer() or not 18 <= age <= 100:
+        raise ValueError("Age must be a whole number between 18 and 100.")
+    if t_stage not in (1, 2, 3, 4):
+        raise ValueError("T-stage must be 1, 2, 3 or 4.")
+    if n_stage not in (0, 1, 2, 3):
+        raise ValueError("N-stage must be 0, 1, 2 or 3.")
     # CT embedding
     sitk_image = load_ct_image(ct_input_path, True)
     ct_emb = extract_ct_embedding_from_image(sitk_image).reshape(1, -1)
@@ -251,7 +276,7 @@ def run_prediction(ct_input_path, age, t_stage, n_stage, m_stage, overall_stage,
     hist = {f"hist_{c}": 0.0 for c in CONFIG["histology_categories"]}
     hist[f"hist_{histology}"] = 1.0
     clin = np.array([[
-        age, t_stage, n_stage, m_stage,
+        age, t_stage, n_stage, M_STAGE_FOR_MODEL,
         1.0 if gender == "male" else 0.0,
         CONFIG["stage_map"].get(overall_stage, 0),
         *[hist[f"hist_{c}"] for c in CONFIG["histology_categories"]],
@@ -276,6 +301,8 @@ def run_prediction(ct_input_path, age, t_stage, n_stage, m_stage, overall_stage,
         "prob_1yr": survival_probability_at(risk, 365),
         "prob_2yr": survival_probability_at(risk, 730),
         "test_cindex": CONFIG["test_cindex"],
+        "backend_version": BACKEND_VERSION,
+        "m_stage_used": M_STAGE_FOR_MODEL,
     }
 
 
@@ -294,6 +321,8 @@ def get_config():
         "stage_options": list(CONFIG["stage_map"].keys()),
         "histology_options": CONFIG["histology_categories"],
         "cohort_size": int(len(_TRAIN_RISK_SORTED)) if _TRAIN_RISK_SORTED is not None else None,
+        "backend_version": BACKEND_VERSION,
+        "calibration_source": _CALIBRATION_SOURCE,
     }
 
 
@@ -333,7 +362,7 @@ async def api_predict(
     age: float = Form(...),
     t_stage: float = Form(...),
     n_stage: float = Form(...),
-    m_stage: float = Form(...),
+    m_stage: float = Form(0.0),   # ignored by the model; the form no longer sends it
     overall_stage: str = Form(...),
     histology: str = Form(...),
     gender: str = Form(...),

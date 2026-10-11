@@ -45,7 +45,7 @@
     "IIIa": 2,
     "IIIb": 3
   },
-  "test_cindex": 0.5883854499042757,
+  "test_cindex": 0.609,
   "val_cindex": 0.6651814131126671,
   "model_type": "ct_clinical",
   "uses_radiomics": false

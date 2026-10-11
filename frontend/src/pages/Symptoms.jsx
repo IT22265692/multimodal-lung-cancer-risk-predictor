@@ -118,10 +118,6 @@ export default function Symptoms() {
         >
           Symptoms and Guidance
         </h1>
-        <p style={{ color: 'var(--text-dim)', fontSize: 16 }}>
-          Early recognition matters. This page is educational only. It is not a diagnosis. See a
-          qualified clinician for personal advice.
-        </p>
       </header>
 
       <h2 className="section-title">Common symptoms</h2>
@@ -177,7 +173,7 @@ export default function Symptoms() {
         <p style={{ fontSize: 15, color: 'var(--text-dim)', lineHeight: 1.7 }}>
           <strong style={{ color: 'var(--danger)' }}>Emergency:</strong> Seek urgent care for
           sudden severe shortness of breath, coughing up large amounts of blood, chest pain with
-          dizziness, or confusion. This site cannot provide emergency care.
+          dizziness, or confusion.
         </p>
       </div>
     </div>

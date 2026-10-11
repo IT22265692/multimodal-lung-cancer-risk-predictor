@@ -63,7 +63,7 @@ export default function About() {
       >
         {[
           { label: 'Validation C-index', value: '0.665' },
-          { label: 'Test C-index', value: '0.598' },
+          { label: 'Test C-index', value: '0.609' },
           { label: 'Imaging + clinical', value: '3 modalities' },
           { label: 'Radiomics features', value: '16' },
         ].map((s) => (
@@ -150,7 +150,7 @@ export default function About() {
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Performance</h2>
             <p style={{ fontSize: 15, color: 'var(--text-dim)', lineHeight: 1.7 }}>
               Validation C-index about <strong style={{ color: 'var(--text)' }}>0.665</strong>.
-              Held-out test C-index about <strong style={{ color: 'var(--text)' }}>0.598</strong>.
+              Held-out test C-index about <strong style={{ color: 'var(--text)' }}>0.609</strong>.
               C-index measures ranking ability for survival times (0.5 is random).
             </p>
           </div>
@@ -189,26 +189,7 @@ export default function About() {
         </p>
       </section>
 
-      <section
-        className="card"
-        style={{
-          borderColor: 'rgba(220,38,38,0.3)',
-          background: 'rgba(220,38,38,0.05)',
-          marginBottom: 24,
-        }}
-      >
-        <div style={{ display: 'flex', gap: 12 }}>
-          <Shield size={22} style={{ color: 'var(--danger)', flexShrink: 0 }} />
-          <div>
-            <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Important disclaimer</h2>
-            <p style={{ fontSize: 15, color: 'var(--text-dim)', lineHeight: 1.7 }}>
-              Lunexa is a research prototype only. It is not a certified medical device and must
-              not be used alone for clinical decisions. Always rely on qualified professionals and
-              standard care guidelines.
-            </p>
-          </div>
-        </div>
-      </section>
+      
 
       <div style={{ textAlign: 'center', paddingBottom: 12 }}>
         <Link to="/predict" className="btn-primary">

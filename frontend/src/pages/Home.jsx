@@ -170,7 +170,7 @@ export default function Home() {
           }}
         >
           {[
-            { label: 'Test C-index', value: '0.598' },
+            { label: 'Test C-index', value: '0.609' },
             { label: 'Val C-index', value: '0.665' },
             { label: 'Modalities', value: '3' },
             { label: 'Radiomics feats', value: '16' },

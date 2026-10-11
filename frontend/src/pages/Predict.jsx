@@ -3,6 +3,14 @@ import { Upload, Loader2, FolderOpen, FileImage, Info } from 'lucide-react'
 
 const API = '/api'
 
+// Allowed input ranges. These follow the values the model saw in training.
+// N-stage 0 means no lymph-node spread and is common in the training data;
+// to hide it, change N_STAGE_OPTIONS to [1, 2, 3].
+const AGE_MIN = 18
+const AGE_MAX = 100
+const T_STAGE_OPTIONS = [1, 2, 3, 4]
+const N_STAGE_OPTIONS = [0, 1, 2, 3]
+
 export default function Predict() {
   const [config, setConfig] = useState(null)
   const [dicomFiles, setDicomFiles] = useState([])
@@ -11,7 +19,6 @@ export default function Predict() {
   const [age, setAge] = useState('')
   const [tStage, setTStage] = useState('')
   const [nStage, setNStage] = useState('')
-  const [mStage, setMStage] = useState('')
   const [overallStage, setOverallStage] = useState('')
   const [histology, setHistology] = useState('')
   const [gender, setGender] = useState('male')
@@ -71,7 +78,6 @@ export default function Predict() {
     form.append('age', age)
     form.append('t_stage', tStage)
     form.append('n_stage', nStage)
-    form.append('m_stage', mStage)
     form.append('overall_stage', overallStage)
     form.append('histology', histology)
     form.append('gender', gender)
@@ -114,8 +120,14 @@ export default function Predict() {
       setStatusError(true)
       return
     }
-    if (!age || tStage === '' || nStage === '' || mStage === '') {
-      setStatus('Please fill in age and T/N/M stages.')
+    const ageNum = Number(age)
+    if (!Number.isInteger(ageNum) || ageNum < AGE_MIN || ageNum > AGE_MAX) {
+      setStatus(`Please enter a whole-number age between ${AGE_MIN} and ${AGE_MAX}.`)
+      setStatusError(true)
+      return
+    }
+    if (tStage === '' || nStage === '') {
+      setStatus('Please choose the T-stage and N-stage.')
       setStatusError(true)
       return
     }
@@ -377,39 +389,39 @@ export default function Predict() {
               <label className="field-label">Age</label>
               <input
                 className="input"
-                type="number"
-                step="0.01"
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
                 value={age}
-                onChange={(e) => setAge(e.target.value)}
+                onChange={(e) => setAge(e.target.value.replace(/\D/g, '').slice(0, 3))}
                 placeholder="e.g. 65"
               />
             </div>
             <div>
               <label className="field-label">T-Stage</label>
-              <input
-                className="input"
-                type="number"
+              <select
+                className="select"
                 value={tStage}
                 onChange={(e) => setTStage(e.target.value)}
-              />
+              >
+                <option value="">Select</option>
+                {T_STAGE_OPTIONS.map((v) => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="field-label">N-Stage</label>
-              <input
-                className="input"
-                type="number"
+              <select
+                className="select"
                 value={nStage}
                 onChange={(e) => setNStage(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="field-label">M-Stage</label>
-              <input
-                className="input"
-                type="number"
-                value={mStage}
-                onChange={(e) => setMStage(e.target.value)}
-              />
+              >
+                <option value="">Select</option>
+                {N_STAGE_OPTIONS.map((v) => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="field-label">Overall Stage</label>
